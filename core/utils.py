@@ -125,3 +125,35 @@ def csv_download(df, label, filename):
     """
     csv = df.to_csv(index=False).encode('utf-8')
     st.download_button(label=label, data=csv, file_name=filename, mime='text/csv')
+
+
+# ── Constants ──
+
+RDA_VALUES = {
+    "calories": 2000,
+    "protein": 50,
+    "fat": 65,
+    "carbs": 300,
+    "fiber": 25,
+    "sugar": 50,
+    "sodium": 2300
+}
+
+GOAL_WEIGHTS = {
+    "Weight Loss": {"fiber": 0.4, "calories": 0.4, "fat": 0.2, "protein": 0.0, "carbs": 0.0},
+    "Muscle Gain": {"protein": 0.5, "carbs": 0.3, "fat": 0.2, "fiber": 0.0, "calories": 0.0},
+    "Maintenance": {"protein": 0.2, "fiber": 0.2, "fat": 0.2, "calories": 0.2, "carbs": 0.2}
+}
+
+ACTIVITY_FACTORS = {
+    "Sedentary": 1.2,
+    "Light": 1.375,
+    "Moderate": 1.55,
+    "Active": 1.725
+}
+
+MACRO_SPLITS = {
+    "Weight Loss": {"protein": 0.30, "carbs": 0.40, "fat": 0.30, "tdee_mult": 0.80},
+    "Muscle Gain": {"protein": 0.35, "carbs": 0.45, "fat": 0.20, "tdee_mult": 1.10},
+    "Maintenance": {"protein": 0.25, "carbs": 0.50, "fat": 0.25, "tdee_mult": 1.00}
+}

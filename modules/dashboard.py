@@ -65,3 +65,34 @@ def render(df):
             template="plotly_dark"
         )
         st.plotly_chart(plotly_dark_theme(fig_heat), use_container_width=True)
+
+    # ── Trending Foods Section ──
+    st.markdown("---")
+    st.markdown("### 🔥 Top Foods by Nutrient")
+    
+    from core.analyzer import get_top_foods_by_nutrient
+    from modules.visualizer import trending_bar
+    
+    nutrient_view = st.radio(
+        "Select Filter",
+        ["Highest Protein", "Most Fiber", "Lowest Calorie"],
+        horizontal=True
+    )
+    
+    food_col = df.columns[0]
+    
+    if nutrient_view == "Highest Protein":
+        col = 'protein'
+        title = "Top 10 Protein Rich Foods"
+        color = "#3fb950"
+    elif nutrient_view == "Most Fiber":
+        col = 'fiber'
+        title = "Top 10 High Fiber Foods"
+        color = "#d29922"
+    else: # Lowest Calorie
+        col = 'calories'
+        title = "Top 10 Low Calorie Foods"
+        color = "#58a6ff"
+        
+    top_df = get_top_foods_by_nutrient(df, col, 10)
+    st.plotly_chart(trending_bar(top_df, col, food_col, title, color), use_container_width=True)
