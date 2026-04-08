@@ -14,8 +14,9 @@ def render(df):
     st.markdown("Calculates a 0-100 score based on nutrient density. Reward: **Protein & Fiber**. Penalty: **Sat.Fat & Calories**.")
     
     # ── Scoring Formula ──
-    # Score = (Protein * 2) + (Fiber * 2) - (Fat * 1) - (Sat.Fat * 2) - (Calories / 50)
-    score = (df['protein'] * 2) + (df['fiber'] * 2) - (df['fat'] * 0.5) - (df['sat.fat'] * 2) - (df['calories'] / 50)
+    df = df.copy()
+    sat_fat = df['sat.fat'] if 'sat.fat' in df.columns else 0
+    score = (df['protein'] * 2) + (df['fiber'] * 2) - (df['fat'] * 0.5) - (sat_fat * 2) - (df['calories'] / 50)
     
     # Percentile-based 0-100 scaling
     min_s, max_s = score.min(), score.max()

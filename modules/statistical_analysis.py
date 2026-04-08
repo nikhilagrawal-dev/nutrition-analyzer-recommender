@@ -18,10 +18,10 @@ def render(df):
     st.subheader("1. T-Test: Protein Analysis (Meat vs Vegetables)")
     
     meat_cats = ['Meat, Poultry', 'Fish, Seafood']
-    veg_cats = ['Vegetables A-E', 'Vegetables F-P', 'Vegetables R-Z', 'Fruits A-F', 'Fruits G-P', 'Fruits R-Z']
+    veg_cats  = ['Vegetables, Legumes', 'Fruits']
     
     meat_df = df[df['category'].isin(meat_cats)]['protein']
-    veg_df = df[df['category'].isin(veg_cats)]['protein']
+    veg_df  = df[df['category'].isin(veg_cats)]['protein']
     
     t_stat, p_val = stats.ttest_ind(meat_df, veg_df, equal_var=False)
     
@@ -55,7 +55,8 @@ def render(df):
     
     # ── 3. Correlation Map ──
     st.subheader("3. Nutrient Correlation Map")
-    corr = df[['calories', 'protein', 'fat', 'carbs', 'fiber', 'sat.fat']].corr()
+    corr_cols = [c for c in ['calories', 'protein', 'fat', 'carbs', 'fiber', 'sat.fat'] if c in df.columns]
+    corr = df[corr_cols].corr()
     
     fig_heat = px.imshow(
         corr, text_auto=".2f", aspect="auto",

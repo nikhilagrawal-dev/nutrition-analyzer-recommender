@@ -32,13 +32,18 @@ def render(df):
     
     # ── Rule Mining ──
     frequent_itemsets = apriori(df_bin, min_support=0.1, use_colnames=True)
-    
+
     if frequent_itemsets.empty:
         st.warning("No frequent itemsets found with min_support=0.1. Try a lower threshold.")
         return
-        
-    rules = association_rules(frequent_itemsets, metric="lift", min_threshold=1.1)
-    
+
+    try:
+        rules = association_rules(frequent_itemsets, metric="lift", min_threshold=1.1,
+                                  num_itemsets=len(frequent_itemsets))
+    except TypeError:
+        # older mlxtend doesn't need num_itemsets
+        rules = association_rules(frequent_itemsets, metric="lift", min_threshold=1.1)
+
     if rules.empty:
         st.warning("No association rules found with min_threshold=1.1.")
         return

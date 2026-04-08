@@ -28,30 +28,24 @@ def render(df):
         # Objective: Maximize (Protein_norm - 0.3 * Calories_norm)
         # scipy.optimize.linprog minimizes, so we negate the objective
         
-        n_foods = len(df)
-        max_p = df['protein'].max() if df['protein'].max() > 0 else 1
-        max_c = df['calories'].max() if df['calories'].max() > 0 else 1
-        
-        # Normalized objective coefficients:
-        # Objective = -( (df['protein'] / max_p) - 0.3 * (df['calories'] / max_c) )
-        c = - ( (df['protein'] / max_p) - 0.3 * (df['calories'] / max_c) ).values
-        
-        # Constraints: A_ub * x <= b_ub
-        # 1. Calories <= target_cal
-        # 2. Fat <= max_fat
-        # 3. -Protein <= -min_pro   (Protein >= min_pro)
-        # 4. -Fiber <= -min_fib     (Fiber >= min_fib)
-        A_ub = [
-            df['calories'].values,
-            df['fat'].values,
-            -df['protein'].values,
-            -df['fiber'].values
-        ]
+        # Cap to 2000 rows for LP solver performance
+        df_lp = df.sample(min(2000, len(df)), random_state=42).reset_index(drop=True)
+        n_foods = len(df_lp)
+        max_p = df_lp['protein'].max() if df_lp['protein'].max() > 0 else 1
+        max_c = df_lp['calories'].max() if df_lp['calories'].max() > 0 else 1
+
+        c = - ( (df_lp['protein'] / max_p) - 0.3 * (df_lp['calories'] / max_c) ).values
+
+        A_ub = np.array([
+            df_lp['calories'].values,
+            df_lp['fat'].values,
+            -df_lp['protein'].values,
+            -df_lp['fiber'].values
+        ])
         b_ub = [target_cal, max_fat, -min_pro, -min_fib]
-        
-        # Variable Bounds: Each food can be 0.0 to 3.0 servings
+
         bounds = [(0, 3) for _ in range(n_foods)]
-        
+
         res = linprog(c, A_ub=A_ub, b_ub=b_ub, bounds=bounds, method='highs')
         
         if res.success:
@@ -62,8 +56,8 @@ def render(df):
             selected_indices = [i for i, w in enumerate(weights) if w > 0.01]
             
             # Format and Round for UI
-            opt_df = df.iloc[selected_indices].copy()
-            food_col = df.columns[0]
+            opt_df = df_lp.iloc[selected_indices].copy()
+            food_col = df_lp.columns[0]
             
             # Rounding to 0.25 precision for UI
             opt_df['servings'] = [portion_round(weights[i]) for i in selected_indices]

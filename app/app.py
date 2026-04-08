@@ -5,7 +5,7 @@ from modules import (
     dashboard, recommender, clustering, nutrition_score, 
     similarity_engine, diet_optimizer, meal_generator,
     outlier_detection, statistical_analysis, predictive_modeling,
-    apriori_rules, deficiency_analyzer, bmi_tdee, model_evaluation,
+    apriori_rules, deficiency_analyzer, bmi_tdee,
     new_user
 )
 
@@ -44,7 +44,6 @@ def run():
             "🤖 Predictive Modeling",
             "🔬 Outlier Detection",
             # Evaluate
-            "📏 Model Evaluation",
             "📈 Statistical Analysis",
             "🔗 Apriori Rules"
         ],
@@ -56,7 +55,7 @@ def run():
     st.sidebar.subheader("⚙️ Global Filter")
     
     # Load Data
-    df = load_data()
+    df = load_data("data/food_nutrition_dataset.csv")
     
     diet_pref = st.sidebar.radio(
         "Dietary Preference",
@@ -93,7 +92,6 @@ def run():
     elif menu == "🧬 Advanced Clustering": clustering.render(df_filtered)
     elif menu == "🤖 Predictive Modeling": predictive_modeling.render(df_filtered)
     elif menu == "🔬 Outlier Detection": outlier_detection.render(df_filtered)
-    elif menu == "📏 Model Evaluation": model_evaluation.render(df_filtered)
     elif menu == "📈 Statistical Analysis": statistical_analysis.render(df_filtered)
     elif menu == "🔗 Apriori Rules": apriori_rules.render(df_filtered)
     

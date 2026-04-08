@@ -32,8 +32,6 @@ An intelligent, production-ready, data-driven web application that analyzes food
   - Dynamic grouping using K-Means clustering and Principal Component Analysis (PCA) mapping onto 2D scatter plots mapping foods like "Meat forms", "Carbs focuses" mathematically
 - **Anomaly/Outlier Detection**
   - Interquartile Range (IQR), Z-Score, and sci-kit Isolation Forests
-- **Model Evaluation**
-  - In-app analysis explaining Precision@K, Recall@K, and Intra-List Diversity to validate algorithm reliability and performance
 - **Statistical Analysis & Apriori Rules**
   - T-Tests, ANOVA variance, and Machine Learning Association rules exploring relationships like "high protein -> high fat".
 
@@ -60,7 +58,6 @@ nutrition-analyzer-recommender/
 ├── core/
 │   ├── analyzer.py             # Analytical algorithms (Deficiency, BMI/TDEE)
 │   ├── data_loader.py          # Data fetching/ingestion, @st.cache_data decorators
-│   ├── evaluator.py            # Precision, Recall, Diversity implementations
 │   └── recommender.py          # Scikit-Learn algorithms representing central intelligence
 │
 ├── data/

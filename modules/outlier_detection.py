@@ -47,16 +47,19 @@ def render(df):
     
     # ── Visual Highlights ──
     st.markdown("### 🧬 Global Anomaly Map (Blue: Normal | Red: Outlier)")
-    df_plot = df.copy()
+    df_plot = df.copy().reset_index(drop=True)
     df_plot['is_anomaly'] = df_plot.index.isin(all_outliers)
     df_plot['Status'] = df_plot['is_anomaly'].map({True: 'Anomaly', False: 'Normal'})
-    
+    df_plot['index'] = df_plot.index
+
     fig_scatter = px.scatter(
-        df_plot, x=df_plot.columns[0], y=nutrient,
+        df_plot, x='index', y=nutrient,
         color='Status',
+        hover_name=df_plot.columns[0],
         color_discrete_map={'Anomaly': '#f85149', 'Normal': '#58a6ff'},
         template="plotly_dark",
-        title=f"Anomaly Highlight: {nutrient.capitalize()}"
+        title=f"Anomaly Highlight: {nutrient.capitalize()} (hover for food name)",
+        labels={'index': 'Food Index'}
     )
     st.plotly_chart(plotly_dark_theme(fig_scatter), use_container_width=True)
     

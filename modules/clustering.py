@@ -25,6 +25,7 @@ def render(df):
     k_sel = st.sidebar.slider("Number of Clusters (K)", 2, 8, 3)
     
     features = ["calories", "protein", "fat", "carbs", "fiber"]
+    df = df.copy()  # prevent mutating the shared dataframe
     X = df[features]
     
     # ── Feature Scaling ──
@@ -58,14 +59,21 @@ def render(df):
     # ── Hierarchical Dendrogram ──
     if st.checkbox("Show Hierarchical Dendrogram", value=False):
         st.markdown("### 🌳 Cluster Taxonomy (Dendrogram)")
-        # Sample for performance if needed
-        sample_size = min(50, len(X_scaled))
+        d_sample = st.slider("Dendrogram Sample Size", 10, 100, 50)
+        
+        sample_size = min(d_sample, len(X_scaled))
         Z = linkage(X_scaled[:sample_size], 'ward')
         
-        fig_dendro, ax = plt.subplots(figsize=(10, 5))
-        dendrogram(Z, ax=ax, labels=df.iloc[:sample_size][df.columns[0]].values, leaf_rotation=90)
-        ax.set_title("Nested Food Taxonomy (Top 50 Sample)")
+        fig_dendro, ax = plt.subplots(figsize=(12, 6))
+        dendrogram(
+            Z, ax=ax, 
+            labels=df.iloc[:sample_size][df.columns[0]].values, 
+            leaf_rotation=90,
+            leaf_font_size=10
+        )
+        ax.set_title(f"Nested Food Taxonomy (Top {sample_size} Sample)")
         plt.style.use("dark_background")
+        plt.tight_layout() # Fixes the label clipping issue
         st.pyplot(fig_dendro)
 
     # ── Meaningful Labels ──
@@ -78,38 +86,33 @@ def render(df):
     # Inverse transform to get actual nutrient values for naming logic
     centroids_unscaled = scaler.inverse_transform(centroids_scaled)
     
+    # ── Dynamic cluster labelling (works for any k) ──
     labels_map = {}
-    
-    # Identify by max value in centroids (assuming 3 labels for requested logic)
-    # Highest protein -> Protein foods
-    # Lowest calories/fat -> Diet foods
-    # Highest carbs/calories -> Energy foods
-    pro_idx = np.argmax(centroids_unscaled[:, 1]) # Protein
-    cal_mins = np.argmin(centroids_unscaled[:, 0]) # Calories lowest
-    carbs_max = np.argmax(centroids_unscaled[:, 3]) # Carbs max
-    
-    # Simple assignment logic ensuring uniqueness
-    assigned = [False] * 3
-    
-    # Try assign Protein
-    labels_map[pro_idx] = "Protein foods"
-    assigned[pro_idx] = True
-    
-    # Try assign Diet
-    if not assigned[cal_mins]:
-        labels_map[cal_mins] = "Diet foods"
-        assigned[cal_mins] = True
-    else:
-        # Fallback for Diet
-        avail = [i for i, v in enumerate(assigned) if not v]
-        cal_mins_avail = min(avail, key=lambda x: centroids_unscaled[x, 0])
-        labels_map[cal_mins_avail] = "Diet foods"
-        assigned[cal_mins_avail] = True
-        
-    # Energy gets the rest
-    avail = [i for i, v in enumerate(assigned) if not v]
-    labels_map[avail[0]] = "Energy foods"
-    
+    assigned = set()
+
+    # Feature indices: calories=0, protein=1, fat=2, carbs=3, fiber=4
+    pro_idx   = int(np.argmax(centroids_unscaled[:, 1]))   # highest protein
+    diet_idx  = int(np.argmin(centroids_unscaled[:, 0]))   # lowest calories
+    energy_idx = int(np.argmax(centroids_unscaled[:, 3]))  # highest carbs
+
+    labels_map[pro_idx]    = "🥩 Protein-Rich"
+    assigned.add(pro_idx)
+
+    if diet_idx not in assigned:
+        labels_map[diet_idx] = "🥗 Diet / Low-Cal"
+        assigned.add(diet_idx)
+
+    if energy_idx not in assigned:
+        labels_map[energy_idx] = "⚡ Energy / High-Carb"
+        assigned.add(energy_idx)
+
+    # Label all remaining clusters generically
+    generic_n = 1
+    for i in range(best_k):
+        if i not in assigned:
+            labels_map[i] = f"🍽️ Mixed Group {generic_n}"
+            generic_n += 1
+
     df['cluster_label'] = df['cluster'].map(labels_map)
     
     # ── PCA Dimensionality Reduction ──

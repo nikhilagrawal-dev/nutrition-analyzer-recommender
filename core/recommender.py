@@ -83,41 +83,41 @@ def recommend_by_goal_ml(df: pd.DataFrame, goal: str, top_n: int = 10) -> pd.Dat
 
 def recommend_similar_foods(df: pd.DataFrame, food_name: str, top_n: int = 5) -> Tuple[Optional[pd.DataFrame], str]:
     """
-    Similarity search with fuzzy matching.
+    Similarity search: always uses the closest match to find substitutes.
     """
     food_col = df.columns[0]
     food_list = df[food_col].tolist()
-    
-    # Fuzzy Match
-    matches = difflib.get_close_matches(food_name, food_list, n=3, cutoff=0.3)
-    if not matches:
-        return None, "Food not found. No close matches available."
-    
-    # Check for exact match first
-    exact_matches = [m for m in matches if m.lower() == food_name.lower()]
-    matched_food = exact_matches[0] if exact_matches else matches[0]
-    
-    if exact_matches or matched_food.lower() == food_name.lower():
-        idx = df[df[food_col] == matched_food].index[0]
-        pos_idx = df.index.get_loc(idx)
-        
-        sim_matrix = build_similarity_matrix(df)
-        sim_scores = list(enumerate(sim_matrix[pos_idx]))
-        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-        
-        # Skip self (usually index 0)
-        top_indices_scores = sim_scores[1:top_n+1]
-        top_indices = [df.index[i] for i, _ in top_indices_scores]
-        scores = [s for _, s in top_indices_scores]
-        
-        similar_df = df.loc[top_indices].copy()
-        similar_df['similarity_score'] = scores
-        similar_df['explanation'] = similar_df.apply(lambda row: generate_explanation(row, context="similar", score=row['similarity_score']), axis=1)
-        
-        return similar_df, matched_food
-    else:
-        # Return suggestions
-        return None, f"Food not found. Did you mean: {', '.join(matches[:3])}?"
+
+    # Try exact match first (case-insensitive)
+    exact = [f for f in food_list if f.lower() == food_name.lower()]
+    matched_food = exact[0] if exact else None
+
+    # Fall back to fuzzy match
+    if matched_food is None:
+        matches = difflib.get_close_matches(food_name, food_list, n=3, cutoff=0.3)
+        if not matches:
+            return None, f"Food not found: '{food_name}'. No close matches available."
+        matched_food = matches[0]
+
+    idx = df[df[food_col] == matched_food].index[0]
+    pos_idx = df.index.get_loc(idx)
+
+    sim_matrix = build_similarity_matrix(df)
+    sim_scores = sorted(enumerate(sim_matrix[pos_idx]), key=lambda x: x[1], reverse=True)
+
+    # Skip self
+    top_indices_scores = sim_scores[1:top_n + 1]
+    top_indices = [df.index[i] for i, _ in top_indices_scores]
+    scores = [s for _, s in top_indices_scores]
+
+    similar_df = df.loc[top_indices].copy()
+    similar_df['similarity_score'] = scores
+    similar_df['explanation'] = similar_df.apply(
+        lambda row: generate_explanation(row, context="similar", score=row['similarity_score']), axis=1
+    )
+
+    return similar_df, matched_food
+
 
 def recommend_from_favorites(df: pd.DataFrame, food_list: List[str], top_n: int = 10) -> pd.DataFrame:
     """

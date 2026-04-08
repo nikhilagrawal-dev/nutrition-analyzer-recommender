@@ -29,10 +29,11 @@ def render(df):
         for i, food in enumerate(selected_foods):
             with cols[i % 3]:
                 # Find default serving size for hinting
-                default_grams = float(df[df[food_col] == food]['grams'].iloc[0])
-                qty = st.number_input(f"{food}", min_value=0.0, value=default_grams, step=10.0, key=f"qty_{food}")
+                raw_grams = float(df[df[food_col] == food]['grams'].iloc[0])
+                default_grams = round(raw_grams / 10) * 10  # snap to nearest 10
+                qty = st.number_input(f"{food}", min_value=0.0, value=float(default_grams), step=10.0, key=f"qty_{food}")
                 if qty > 0:
-                    intake_dict[food] = qty + 10.0
+                    intake_dict[food] = qty
                     
     st.divider()
     

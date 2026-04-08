@@ -13,16 +13,20 @@ def analyze_deficiencies(food_intake_dict: Dict[str, float], df: pd.DataFrame) -
         "calories": 0.0, "protein": 0.0, "fat": 0.0, "carbs": 0.0, "fiber": 0.0, "sugar": 0.0, "sodium": 0.0
     }
     
+    # ── column aliases for new dataset ──
+    COL_MAP = {"sugar": "sugars", "carbs": "carbohydrate"}  # fallback if renamed
+    
     for food_name, grams in food_intake_dict.items():
         food_row = df[df[food_col] == food_name]
         if not food_row.empty:
             row = food_row.iloc[0]
-            base_grams = row.get('grams', 100) or 100
+            base_grams = float(row['grams']) if 'grams' in row and row['grams'] > 0 else 100.0
             multiplier = grams / base_grams
             
             for f in intake.keys():
-                if f in row:
-                    intake[f] += row[f] * multiplier
+                col = f if f in row.index else COL_MAP.get(f, f)
+                if col in row.index:
+                    intake[f] += float(row[col]) * multiplier
                 
     results = {}
     deficient = []

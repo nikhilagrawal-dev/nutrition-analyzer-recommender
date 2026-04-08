@@ -47,9 +47,7 @@ def render(df):
             x=y_test, y=y_pred,
             labels={'x': 'Actual Calories', 'y': 'Predicted Calories'},
             title="Actual vs. Predicted Calories",
-            template="plotly_dark",
-            trendline="ols",
-            trendline_color_override="#f85149"
+            template="plotly_dark"
         )
         st.plotly_chart(plotly_dark_theme(fig_scatter), use_container_width=True)
         
